@@ -1,0 +1,5 @@
+app:
+  port: 8080
+  url: http://localhost:${app.port}/
+  idLength: 5
+  retryNumber: 10
