@@ -27,7 +27,7 @@ public class UrlShortenerController {
     UrlShortenerService urlShortenerService;
 
     @PostMapping(value = "/", consumes = APPLICATION_JSON_VALUE)
-    public UrlDto generateShortUrl(@RequestBody UrlDto longUrlDto) {
+    public UrlDto createShortUrl(@RequestBody UrlDto longUrlDto) {
         String shortUrlId = urlShortenerService.createShortUrl(longUrlDto.getUrl());
         return new UrlDto(HOST_URL + shortUrlId);
     }

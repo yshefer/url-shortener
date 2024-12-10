@@ -2,6 +2,7 @@ package com.urlshortener.service;
 
 import com.urlshortener.dao.UrlShortenerDao;
 import com.urlshortener.entity.UrlsMatchEntity;
+import com.urlshortener.utils.RandomStringGenerator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,13 +21,14 @@ public class UrlShortenerServiceImpl implements UrlShortenerService {
     private final UrlShortenerDao urlShortenerDao;
     private final UrlIdGenerationService urlIdGenerationService;
 
-    @Value("${app.retryNumber}")
+    @Value("${app.shortUrls.retryNumber}")
     private int retryNumber;
 
-    public UrlShortenerServiceImpl(@Autowired UrlShortenerDao urlShortenerDao,
-                                   @Autowired UrlIdGenerationService urlIdGenerationService) {
+    @Value("${app.shortUrls.idLength}")
+    private int shortIdLength;
+
+    public UrlShortenerServiceImpl(@Autowired UrlShortenerDao urlShortenerDao) {
         this.urlShortenerDao = urlShortenerDao;
-        this.urlIdGenerationService = urlIdGenerationService;
     }
 
     @Override
@@ -38,7 +40,7 @@ public class UrlShortenerServiceImpl implements UrlShortenerService {
         }
         String shortUrlId;
         for (int i = 0; i < retryNumber; i++) {
-            shortUrlId = urlIdGenerationService.generateUrl();
+            shortUrlId = RandomStringGenerator.generateString(shortIdLength);
             try {
                 urlShortenerDao.insert(shortUrlId, fullLongUrl);
                 return shortUrlId;
