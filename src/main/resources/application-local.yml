@@ -4,6 +4,8 @@ app:
   shortUrls:
     idLength: 5
     retryNumber: 10
+  cache:
+    size: 1000
 
 spring:
   datasource:

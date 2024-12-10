@@ -19,7 +19,7 @@ public class UrlShortenerServiceImpl implements UrlShortenerService {
     public static final String HTTP_PROTOCOL = "http://";
 
     private final UrlShortenerDao urlShortenerDao;
-    private final UrlIdGenerationService urlIdGenerationService;
+    private final CacheService cacheService;
 
     @Value("${app.shortUrls.retryNumber}")
     private int retryNumber;
@@ -27,17 +27,45 @@ public class UrlShortenerServiceImpl implements UrlShortenerService {
     @Value("${app.shortUrls.idLength}")
     private int shortIdLength;
 
-    public UrlShortenerServiceImpl(@Autowired UrlShortenerDao urlShortenerDao) {
+    public UrlShortenerServiceImpl(@Autowired UrlShortenerDao urlShortenerDao,
+                                   @Autowired CacheService cacheService) {
         this.urlShortenerDao = urlShortenerDao;
+        this.cacheService = cacheService;
     }
 
     @Override
     public String createShortUrl(String longUrl) {
-        String fullLongUrl = addHttpPrefix(longUrl);
+        String fullLongUrl = addHttpsPrefix(longUrl);
         Optional<UrlsMatchEntity> urlsMatchEntity = urlShortenerDao.findByLongUrl(fullLongUrl);
         if (urlsMatchEntity.isPresent()) {
             return urlsMatchEntity.get().getShortUrlId();
         }
+        return findFreeShortUrlId(fullLongUrl);
+    }
+
+    @Override
+    public String getLongUrl(String shortUrlId) {
+        String cachedLongUrl = cacheService.getLongUrl(shortUrlId);
+        if (cachedLongUrl != null) {
+            return cachedLongUrl;
+        }
+        Optional<UrlsMatchEntity> urlsMatchEntity = urlShortenerDao.findById(shortUrlId);
+        if (urlsMatchEntity.isEmpty()) {
+            throw new RuntimeException(String.format("Short url with id %s doesn't exist", shortUrlId));
+        }
+        String longUrl = urlsMatchEntity.get().getLongUrl();
+        cacheService.cache(shortUrlId, longUrl);
+        return longUrl;
+    }
+
+    private String addHttpsPrefix(String longUrl) {
+        if (longUrl.startsWith(HTTPS_PROTOCOL) || longUrl.startsWith(HTTP_PROTOCOL)) {
+            return longUrl;
+        }
+        return HTTPS_PROTOCOL + longUrl;
+    }
+
+    private String findFreeShortUrlId(String fullLongUrl) {
         String shortUrlId;
         for (int i = 0; i < retryNumber; i++) {
             shortUrlId = RandomStringGenerator.generateString(shortIdLength);
@@ -50,21 +78,5 @@ public class UrlShortenerServiceImpl implements UrlShortenerService {
         }
         log.error("Haven't generated a short URL id. Increase app.retryNumber in configuration");
         throw new RuntimeException("Haven't generated a short URL. Try again");
-    }
-
-    @Override
-    public String getLongUrl(String shortUrlId) {
-        Optional<UrlsMatchEntity> urlsMatchEntity = urlShortenerDao.findById(shortUrlId);
-        if (urlsMatchEntity.isEmpty()) {
-            return null;
-        }
-        return urlsMatchEntity.get().getLongUrl();
-    }
-
-    private String addHttpPrefix(String longUrl) {
-        if (longUrl.startsWith(HTTPS_PROTOCOL) || longUrl.startsWith(HTTP_PROTOCOL)) {
-            return longUrl;
-        }
-        return HTTPS_PROTOCOL + longUrl;
     }
 }
