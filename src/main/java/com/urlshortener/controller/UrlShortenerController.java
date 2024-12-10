@@ -15,10 +15,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
 
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+
 @RestController
 public class UrlShortenerController {
-
-    private static final String ERROR_PAGE_URL = "/error";
 
     @Value(value = "${app.url}")
     public String HOST_URL;
@@ -26,7 +26,7 @@ public class UrlShortenerController {
     @Autowired
     UrlShortenerService urlShortenerService;
 
-    @PostMapping(value = "/", consumes = "application/json")
+    @PostMapping(value = "/", consumes = APPLICATION_JSON_VALUE)
     public UrlDto generateShortUrl(@RequestBody UrlDto longUrlDto) {
         String shortUrlId = urlShortenerService.createShortUrl(longUrlDto.getUrl());
         return new UrlDto(HOST_URL + shortUrlId);
