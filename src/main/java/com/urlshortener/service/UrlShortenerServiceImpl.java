@@ -2,13 +2,16 @@ package com.urlshortener.service;
 
 import com.urlshortener.dao.UrlShortenerDao;
 import com.urlshortener.entity.UrlsMatchEntity;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
 @Service
+@Slf4j
 public class UrlShortenerServiceImpl implements UrlShortenerService {
 
     public static final String HTTPS_PROTOCOL = "https://";
@@ -36,12 +39,14 @@ public class UrlShortenerServiceImpl implements UrlShortenerService {
         String shortUrlId;
         for (int i = 0; i < retryNumber; i++) {
             shortUrlId = urlIdGenerationService.generateUrl();
-            urlsMatchEntity = urlShortenerDao.findById(shortUrlId);
-            if (urlsMatchEntity.isEmpty()) {
-                urlShortenerDao.save(new UrlsMatchEntity(shortUrlId, fullLongUrl));
+            try {
+                urlShortenerDao.insert(shortUrlId, fullLongUrl);
                 return shortUrlId;
+            } catch (DataIntegrityViolationException ex) {
+                log.warn("Generated short URL ID already exists", ex);
             }
         }
+        log.error("Haven't generated a short URL id. Increase app.retryNumber in configuration");
         throw new RuntimeException("Haven't generated a short URL. Try again");
     }
 
@@ -58,6 +63,6 @@ public class UrlShortenerServiceImpl implements UrlShortenerService {
         if (longUrl.startsWith(HTTPS_PROTOCOL) || longUrl.startsWith(HTTP_PROTOCOL)) {
             return longUrl;
         }
-        return HTTP_PROTOCOL + longUrl;
+        return HTTPS_PROTOCOL + longUrl;
     }
 }

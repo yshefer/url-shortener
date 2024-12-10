@@ -3,3 +3,16 @@ app:
   url: http://localhost:${app.port}/
   idLength: 5
   retryNumber: 10
+
+spring:
+  datasource:
+    url: jdbc:h2:mem:db;MODE=PostgreSQL
+    driver-class-name: org.h2.Driver
+    username: ${user}
+    password: ${password}
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+  h2:
+    console:
+      enabled: true
+      path: /h2-console

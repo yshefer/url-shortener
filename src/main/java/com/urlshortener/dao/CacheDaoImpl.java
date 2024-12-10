@@ -1,24 +1,20 @@
 package com.urlshortener.dao;
 
 import com.urlshortener.entity.UrlsMatchEntity;
-import org.springframework.stereotype.Repository;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-@Repository
-public class UrlShortenerDaoImpl implements UrlShortenerDao {
+public class CacheDaoImpl {
 
     private final Map<String, String> urlMap = new HashMap<>();
 
-    @Override
     public UrlsMatchEntity save(UrlsMatchEntity urlsMatchEntity) {
         urlMap.put(urlsMatchEntity.getShortUrlId(), urlsMatchEntity.getLongUrl());
         return urlsMatchEntity;
     }
 
-    @Override
     public Optional<UrlsMatchEntity> findById(String shortUrlId) {
         String longUrl = urlMap.get(shortUrlId);
         if (longUrl == null) {
@@ -27,7 +23,6 @@ public class UrlShortenerDaoImpl implements UrlShortenerDao {
         return Optional.of(new UrlsMatchEntity(shortUrlId, longUrl));
     }
 
-    @Override
     public Optional<UrlsMatchEntity> findByLongUrl(String longUrl) {
         for (Map.Entry<String, String> entry : urlMap.entrySet()) {
             if (entry.getValue().equals(longUrl)) {
