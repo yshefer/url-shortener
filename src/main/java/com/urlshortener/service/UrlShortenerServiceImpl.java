@@ -1,6 +1,6 @@
 package com.urlshortener.service;
 
-import com.urlshortener.dao.UrlShortenerDao;
+import com.urlshortener.repository.UrlShortenerRepository;
 import com.urlshortener.entity.UrlsMatchEntity;
 import com.urlshortener.exception.ShortURLGenerationException;
 import com.urlshortener.exception.ShortURLNotFoundException;
@@ -20,7 +20,7 @@ public class UrlShortenerServiceImpl implements UrlShortenerService {
     public static final String HTTPS_PROTOCOL = "https://";
     public static final String HTTP_PROTOCOL = "http://";
 
-    private final UrlShortenerDao urlShortenerDao;
+    private final UrlShortenerRepository urlShortenerRepository;
     private final CacheService cacheService;
 
     @Value("${app.shortUrls.retryNumber}")
@@ -29,16 +29,16 @@ public class UrlShortenerServiceImpl implements UrlShortenerService {
     @Value("${app.shortUrls.idLength}")
     private int shortIdLength;
 
-    public UrlShortenerServiceImpl(@Autowired UrlShortenerDao urlShortenerDao,
+    public UrlShortenerServiceImpl(@Autowired UrlShortenerRepository urlShortenerRepository,
                                    @Autowired CacheService cacheService) {
-        this.urlShortenerDao = urlShortenerDao;
+        this.urlShortenerRepository = urlShortenerRepository;
         this.cacheService = cacheService;
     }
 
     @Override
     public String createShortUrl(String longUrl) {
         String fullLongUrl = addHttpsPrefix(longUrl);
-        Optional<UrlsMatchEntity> urlsMatchEntity = urlShortenerDao.findByLongUrl(fullLongUrl);
+        Optional<UrlsMatchEntity> urlsMatchEntity = urlShortenerRepository.findByLongUrl(fullLongUrl);
         if (urlsMatchEntity.isPresent()) {
             return urlsMatchEntity.get().getShortUrlId();
         }
@@ -51,7 +51,7 @@ public class UrlShortenerServiceImpl implements UrlShortenerService {
         if (cachedLongUrl != null) {
             return cachedLongUrl;
         }
-        Optional<UrlsMatchEntity> urlsMatchEntity = urlShortenerDao.findById(shortUrlId);
+        Optional<UrlsMatchEntity> urlsMatchEntity = urlShortenerRepository.findById(shortUrlId);
         if (urlsMatchEntity.isEmpty()) {
             String message = String.format("Short url with id %s doesn't exist", shortUrlId);
             log.info(message);
@@ -74,7 +74,7 @@ public class UrlShortenerServiceImpl implements UrlShortenerService {
         for (int i = 0; i < retryNumber; i++) {
             shortUrlId = RandomStringGenerator.generateString(shortIdLength);
             try {
-                urlShortenerDao.insert(shortUrlId, fullLongUrl);
+                urlShortenerRepository.insert(shortUrlId, fullLongUrl);
                 return shortUrlId;
             } catch (DataIntegrityViolationException ex) {
                 log.warn("Generated short URL ID {} already exists", shortUrlId);

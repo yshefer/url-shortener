@@ -12,36 +12,23 @@ import java.util.Map;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
-
-    @ExceptionHandler(ShortURLGenerationException.class)
-    public ResponseEntity<Map<String, Object>> handleShortURLGenerationException(ShortURLGenerationException exception,
-                                                                                 HttpServletRequest request) {
-        Map<String, Object> errorResponse = new HashMap<>();
-        errorResponse.put("timestamp", LocalDateTime.now());
-        errorResponse.put("error", HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase());
-        errorResponse.put("message", exception.getMessage());
-        errorResponse.put("path", request.getRequestURI());
-        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-
-    @ExceptionHandler({ShortURLNotFoundException.class, IllegalArgumentException.class})
-    public ResponseEntity<Map<String, Object>> handleShortURLNotFoundException(RuntimeException exception,
-                                                                                 HttpServletRequest request) {
-        Map<String, Object> errorResponse = new HashMap<>();
-        errorResponse.put("timestamp", LocalDateTime.now());
-        errorResponse.put("error", HttpStatus.BAD_REQUEST.getReasonPhrase());
-        errorResponse.put("message", exception.getMessage());
-        errorResponse.put("path", request.getRequestURI());
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, Object>> handleShortURLNotFoundException(IllegalArgumentException exception,
+                                                                               HttpServletRequest request) {
+        return getResponseEntity(request, HttpStatus.BAD_REQUEST, exception.getMessage());
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleException(Exception exception, HttpServletRequest request) {
+        return getResponseEntity(request, HttpStatus.INTERNAL_SERVER_ERROR, exception.getMessage());
+    }
+
+    private ResponseEntity<Map<String, Object>> getResponseEntity(HttpServletRequest request, HttpStatus httpStatus, String message) {
         Map<String, Object> errorResponse = new HashMap<>();
         errorResponse.put("timestamp", LocalDateTime.now());
-        errorResponse.put("error", HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase());
-        errorResponse.put("message", exception.getMessage());
+        errorResponse.put("error", httpStatus.getReasonPhrase());
+        errorResponse.put("message", message);
         errorResponse.put("path", request.getRequestURI());
-        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+        return new ResponseEntity<>(errorResponse, httpStatus);
     }
 }
