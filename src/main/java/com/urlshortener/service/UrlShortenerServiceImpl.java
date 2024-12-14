@@ -2,6 +2,8 @@ package com.urlshortener.service;
 
 import com.urlshortener.dao.UrlShortenerDao;
 import com.urlshortener.entity.UrlsMatchEntity;
+import com.urlshortener.exception.ShortURLGenerationException;
+import com.urlshortener.exception.ShortURLNotFoundException;
 import com.urlshortener.utils.RandomStringGenerator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,7 +53,9 @@ public class UrlShortenerServiceImpl implements UrlShortenerService {
         }
         Optional<UrlsMatchEntity> urlsMatchEntity = urlShortenerDao.findById(shortUrlId);
         if (urlsMatchEntity.isEmpty()) {
-            throw new RuntimeException(String.format("Short url with id %s doesn't exist", shortUrlId));
+            String message = String.format("Short url with id %s doesn't exist", shortUrlId);
+            log.info(message);
+            throw new ShortURLNotFoundException(message);
         }
         String longUrl = urlsMatchEntity.get().getLongUrl();
         cacheService.cache(shortUrlId, longUrl);
@@ -73,10 +77,10 @@ public class UrlShortenerServiceImpl implements UrlShortenerService {
                 urlShortenerDao.insert(shortUrlId, fullLongUrl);
                 return shortUrlId;
             } catch (DataIntegrityViolationException ex) {
-                log.warn("Generated short URL ID already exists", ex);
+                log.warn("Generated short URL ID {} already exists", shortUrlId);
             }
         }
-        log.error("Haven't generated a short URL id. Increase app.retryNumber in configuration");
-        throw new RuntimeException("Haven't generated a short URL. Try again");
+        log.error("Haven't generated a short URL id for {}. Increase app.shortUrls.idLength in configuration", fullLongUrl);
+        throw new ShortURLGenerationException("Haven't generated a short URL. Try again.");
     }
 }

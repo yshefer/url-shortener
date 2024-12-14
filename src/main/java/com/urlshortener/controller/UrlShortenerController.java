@@ -34,12 +34,7 @@ public class UrlShortenerController {
 
     @GetMapping(value = "/{shortUrlId}")
     public ResponseEntity<String> getLongUrl(@PathVariable String shortUrlId) {
-        String longUrl;
-        try {
-            longUrl = urlShortenerService.getLongUrl(shortUrlId);
-        } catch(RuntimeException exception) {
-            return new ResponseEntity<>(exception.getMessage(), HttpStatus.BAD_REQUEST);
-        }
+        String longUrl = urlShortenerService.getLongUrl(shortUrlId);
         HttpHeaders headers = new HttpHeaders();
         headers.setLocation(URI.create(longUrl));
         return new ResponseEntity<>(headers, HttpStatus.FOUND);
