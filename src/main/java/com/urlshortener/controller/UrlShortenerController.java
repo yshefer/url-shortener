@@ -20,6 +20,9 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @RestController
 public class UrlShortenerController {
 
+    private static final int MAX_URL_LENGTH = 2048;
+    private static final String URL_IS_TOO_LONG_MSG = "URL is too long";
+
     @Value(value = "${app.url}")
     public String HOST_URL;
 
@@ -28,6 +31,9 @@ public class UrlShortenerController {
 
     @PostMapping(value = "/", consumes = APPLICATION_JSON_VALUE)
     public UrlDto createShortUrl(@RequestBody UrlDto longUrlDto) {
+        if (longUrlDto.getUrl().length() > MAX_URL_LENGTH) {
+            throw new IllegalArgumentException(URL_IS_TOO_LONG_MSG);
+        }
         String shortUrlId = urlShortenerService.createShortUrl(longUrlDto.getUrl());
         return new UrlDto(HOST_URL + shortUrlId);
     }

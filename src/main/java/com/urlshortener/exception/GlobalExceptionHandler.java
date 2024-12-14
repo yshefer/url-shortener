@@ -24,8 +24,8 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    @ExceptionHandler(ShortURLNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleShortURLNotFoundException(ShortURLNotFoundException exception,
+    @ExceptionHandler({ShortURLNotFoundException.class, IllegalArgumentException.class})
+    public ResponseEntity<Map<String, Object>> handleShortURLNotFoundException(RuntimeException exception,
                                                                                  HttpServletRequest request) {
         Map<String, Object> errorResponse = new HashMap<>();
         errorResponse.put("timestamp", LocalDateTime.now());
