@@ -1,0 +1,21 @@
+# example of live configuration with postgresql
+app:
+  url: http://${app.host}:${app.port}/
+  shortUrls:
+    idLength: 5
+    retryNumber: 10
+  cache:
+    size: 1000
+
+spring:
+  datasource:
+    url: jdbc:postgresql://${postgresql.host}:${postgresql.port}/${postgresql.dbname}
+    driver-class-name: org.postgresql.Driver
+    username: ${user}
+    password: ${password}
+  jpa:
+    hibernate:
+      ddl-auto: none
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog.yml
