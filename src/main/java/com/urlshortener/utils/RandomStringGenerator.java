@@ -4,6 +4,12 @@ import lombok.experimental.UtilityClass;
 
 import java.util.Random;
 
+/**
+ * Utility class for generating random strings.
+ *
+ * <p>This class provides a method to generate random strings of a specified length using a pool of alphanumeric characters.</p>
+ *
+ */
 @UtilityClass
 public class RandomStringGenerator {
     private final char[] symbols = new char[]{'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l',
@@ -13,6 +19,12 @@ public class RandomStringGenerator {
 
     private final Random randomizer = new Random();
 
+    /**
+     * Generates a random string of the specified length using a pool of alphanumeric characters.
+     *
+     * @param stringLength the length of the random string to generate.
+     * @return a random string of the specified length.
+     */
     public String generateString(int stringLength) {
         StringBuilder generatedString = new StringBuilder();
         for (int i = 0; i < stringLength; i++) {
